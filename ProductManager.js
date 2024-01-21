@@ -6,6 +6,10 @@ class ProductManager {
     this.products = [];
   }
 
+  generateUniqueId() {
+    return crypto.randomBytes(6).toString('hex');
+  }
+
   addProduct(producto) {
     if (!producto.title || !producto.description || !producto.price || !producto.thumbnail || !producto.code || !producto.stock) {
       return "Todos los campos son obligatorios.";
@@ -16,7 +20,13 @@ class ProductManager {
     if (existe) {
       return "Producto ya existente";
     } else {
-      producto.id = crypto.randomBytes(6).toString('hex');
+      // Generar un ID único
+      let newId;
+      do {
+        newId = this.generateUniqueId();
+      } while (this.products.some(prod => prod.id === newId));
+
+      producto.id = newId;
       this.products.push(producto);
       return "Producto agregado correctamente";
     }
@@ -38,38 +48,41 @@ class ProductManager {
   }
 }
 
-
 const productManager = new ProductManager();
 
 
-const product1 = {
-  title: 'Producto 1',
-  description: 'Descripcion 1',
-  price: 20,
-  thumbnail: 'img.jpg',
-  code: 'CODE1',
-  stock: 50,
-};
+console.log('Productos al inicio:', productManager.getProducts());
 
-const product2 = {
-  title: 'Producto 2',
-  description: 'Descripcion 2',
-  price: 30,
-  thumbnail: 'img.jpg',
-  code: 'CODE2',
-  stock: 30,
-};
+console.log(
+  productManager.addProduct({
+    title: 'producto prueba',
+    description: 'Este es un producto prueba',
+    price: 200,
+    thumbnail: 'Sin imagen',
+    code: 'abc123',
+    stock: 25,
+  })
+);
 
 
-console.log(productManager.addProduct(product1));
-console.log(productManager.addProduct(product2));
+console.log('Productos después de agregar uno:', productManager.getProducts());
+
+console.log(
+  productManager.addProduct({
+    title: 'producto prueba2',
+    description: 'Este es un producto prueba 2',
+    price: 300,
+    thumbnail: 'Sin imagen2',
+    code: 'abc1234', 
+    stock: 45,
+  })
+);
 
 
-const allProducts = productManager.getProducts();
-console.log('Todos los productos:', allProducts);
+console.log('Productos después de intentar agregar un producto repetido:', productManager.getProducts());
 
 
-const productIdToFind = allProducts[0].id; 
+const productIdToFind = productManager.getProducts()[0].id; 
 const foundProduct = productManager.getProductById(productIdToFind);
 
 
