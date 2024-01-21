@@ -6,10 +6,6 @@ class ProductManager {
     this.products = [];
   }
 
-  generateUniqueId() {
-    return crypto.randomBytes(6).toString('hex');
-  }
-
   addProduct(producto) {
     if (!producto.title || !producto.description || !producto.price || !producto.thumbnail || !producto.code || !producto.stock) {
       return "Todos los campos son obligatorios.";
@@ -20,13 +16,7 @@ class ProductManager {
     if (existe) {
       return "Producto ya existente";
     } else {
-      // Generar un ID único
-      let newId;
-      do {
-        newId = this.generateUniqueId();
-      } while (this.products.some(prod => prod.id === newId));
-
-      producto.id = newId;
+      producto.id = crypto.randomBytes(6).toString('hex');
       this.products.push(producto);
       return "Producto agregado correctamente";
     }
