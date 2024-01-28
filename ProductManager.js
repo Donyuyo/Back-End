@@ -1,83 +1,110 @@
-import crypto from 'crypto';
+import { promises as fs } from 'fs';
 
-console.log(crypto.randomBytes(6).toString('hex'))
-class ProductManager {
-  constructor() {
-    this.products = [];
-  }
-
-  addProduct(producto) {
-    if (!producto.title || !producto.description || !producto.price || !producto.thumbnail || !producto.code || !producto.stock) {
-      return "Todos los campos son obligatorios.";
+export class ProductManager {
+    constructor(path) {
+        this.path = path;
     }
 
-    const existe = this.products.some(prod => prod.code === producto.code);
-
-    if (existe) {
-      return "Producto ya existente";
-    } else {
-      producto.id = crypto.randomBytes(6).toString('hex');
-      this.products.push(producto);
-      return "Producto agregado correctamente";
+    async getProducts() {
+        try {
+            const fileContent = await fs.readFile(this.path, 'utf-8');
+            if (fileContent.trim() === '') {
+                console.log('El archivo está vacío.');
+            } else {
+                const prods = JSON.parse(fileContent);
+                console.log(prods);
+            }
+        } catch (error) {
+            console.error('Error al leer o parsear el archivo:', error.message);
+        }
     }
-  }
 
-  getProductById(productId) {
-    const foundProduct = this.products.find(product => product.id === productId);
-
-    if (foundProduct) {
-      return foundProduct;
-    } else {
-      console.error('Producto con ID', productId, 'Not found.');
-      return null;
+    async getProductById(id) {
+        try {
+            const fileContent = await fs.readFile(this.path, 'utf-8');
+            const prods = JSON.parse(fileContent);
+            const prod = prods.find(producto => producto.id === id);
+            if (prod) {
+                console.log(prod);
+            } else {
+                console.log('Producto no existe');
+            }
+        } catch (error) {
+            console.error('Error al leer o parsear el archivo:', error.message);
+        }
     }
-  }
 
-  getProducts() {
-    return this.products;
-  }
+    async addProduct(newProduct) {
+        try {
+            let fileContent = await fs.readFile(this.path, 'utf-8');
+            
+            if (!fileContent.trim()) {
+                
+                fileContent = '[]';
+            }
+
+            const prods = JSON.parse(fileContent);
+
+            if (newProduct.code && newProduct.id && newProduct.title && newProduct.description && newProduct.price && newProduct.thumbnail && newProduct.code && newProduct.stock) {
+                const indice = prods.findIndex(prod => prod.code === newProduct.code);
+                console.log(indice);
+
+                if (indice === -1) {
+                    prods.push(newProduct);
+                    console.log(prods);
+                    await fs.writeFile(this.path, JSON.stringify(prods));
+                    console.log('Producto creado correctamente');
+                } else {
+                    console.log('Producto ya existe en este array');
+                }
+            } else {
+                console.log('Debe ingresar un producto con todas las propiedades');
+            }
+        } catch (error) {
+            console.error('Error al leer o parsear el archivo:', error.message);
+        }
+    }
+
+    async updateProduct(id, nuevoProducto) {
+        try {
+            const fileContent = await fs.readFile(this.path, 'utf-8');
+            const prods = JSON.parse(fileContent);
+            const indice = prods.findIndex(producto => producto.id === id);
+
+            if (indice !== -1) {
+                prods[indice].stock = nuevoProducto.stock;
+                prods[indice].price = nuevoProducto.price;
+                prods[indice].title = nuevoProducto.title;
+                prods[indice].thumbnail = nuevoProducto.thumbnail;
+                prods[indice].description = nuevoProducto.description;
+                prods[indice].code = nuevoProducto.code;
+
+                await fs.writeFile(this.path, JSON.stringify(prods));
+                console.log('Producto actualizado correctamente');
+            } else {
+                console.log('Producto no existe');
+            }
+        } catch (error) {
+            console.error('Error al leer o parsear el archivo:', error.message);
+        }
+    }
+
+    async deleteProduct(id) {
+        try {
+            const fileContent = await fs.readFile(this.path, 'utf-8');
+            const prods = JSON.parse(fileContent);
+            const indice = prods.findIndex(producto => producto.id === id);
+
+            if (indice !== -1) {
+                const prodsFiltrados = prods.filter(prod => prod.id !== id);
+                await fs.writeFile(this.path, JSON.stringify(prodsFiltrados));
+                console.log('Producto eliminado correctamente');
+            } else {
+                console.log('Producto no existe');
+            }
+        } catch (error) {
+            console.error('Error al leer o parsear el archivo:', error.message);
+        }
+    }
 }
 
-const productManager = new ProductManager();
-
-
-console.log('Productos al inicio:', productManager.getProducts());
-
-console.log(
-  productManager.addProduct({
-    title: 'producto prueba',
-    description: 'Este es un producto prueba',
-    price: 200,
-    thumbnail: 'Sin imagen',
-    code: 'abc123',
-    stock: 25,
-  })
-);
-
-
-console.log('Productos después de agregar uno:', productManager.getProducts());
-
-console.log(
-  productManager.addProduct({
-    title: 'producto prueba2',
-    description: 'Este es un producto prueba 2',
-    price: 300,
-    thumbnail: 'Sin imagen2',
-    code: 'abc1234', 
-    stock: 45,
-  })
-);
-
-
-console.log('Productos después de intentar agregar un producto repetido:', productManager.getProducts());
-
-
-const productIdToFind = productManager.getProducts()[0].id; 
-const foundProduct = productManager.getProductById(productIdToFind);
-
-
-if (foundProduct) {
-  console.log('Producto encontrado:', foundProduct);
-} else {
-  console.log('Producto no encontrado.');
-}
