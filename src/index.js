@@ -1,41 +1,30 @@
 import express from 'express'
-import { ProductManager } from './config/ProductManager.js';
+import cartRouter from './routes/cartRouter.js'
+import productsRouter from './routes/productsRouter.js'
+import upload from './config/multer.js'
+import { __dirname } from './path.js'
 
-
+//Configuraciones o declaraciones
 const app = express()
 const PORT = 8000
-const productManager = new ProductManager('./src/data/products.json')
 
-app.get('/', (req, res) => {
-    res.send("Hola, desde mi primer servidor en Express")
-})
+//Middlewares
+app.use(express.json())
+app.use('/static', express.static(__dirname + '/public'))
 
-app.get('/products', async (req, res) => {
-    const { limit } = req.query
-
-    const prods = await productManager.getProducts()
-    const limite = parseInt(limit)
-    if (limite) {
-        if (limite < 0) {
-            res.send("Ingrese un numero valido para los queries")
-        } else {
-            const prodsLimit = prods.slice(0, limit)
-            res.send(prodsLimit)
-        }
-
-    } else {
-        res.send("Ingrese un valor valido en los Queries")
+//Routes
+app.use('/api/products', productsRouter)
+app.use('/api/cart', cartRouter)
+app.post('/upload', upload.single('product'), (req, res) => {
+    try {
+        console.log(req.file)
+        res.status(200).send("Imagen cargada correctamente")
+    } catch (e) {
+        res.status(500).send("Error al cargar imagen")
     }
-
-
 })
 
-app.get('/products/:pid', async (req, res) => {
-    const idProducto = req.params.pid 
-    const prod = await productManager.getProductById(idProducto)
-    res.send(prod)
-})
-
+//Server
 app.listen(PORT, () => {
     console.log(`Server on port ${PORT}`)
 })

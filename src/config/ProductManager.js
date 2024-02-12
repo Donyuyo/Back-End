@@ -39,26 +39,30 @@ export class ProductManager {
             let fileContent = await fs.readFile(this.path, 'utf-8');
             
             if (!fileContent.trim()) {
-                
                 fileContent = '[]';
             }
 
             const prods = JSON.parse(fileContent);
 
-            if (newProduct.code && newProduct.id && newProduct.title && newProduct.description && newProduct.price && newProduct.thumbnail && newProduct.code && newProduct.stock) {
+            const requiredFields = ['code', 'title', 'description', 'price', 'stock'];
+
+            const missingFields = requiredFields.filter(field => !newProduct[field]);
+
+            if (missingFields.length === 0) {
                 const indice = prods.findIndex(prod => prod.code === newProduct.code);
-                console.log(indice);
 
                 if (indice === -1) {
                     prods.push(newProduct);
-                    console.log(prods);
                     await fs.writeFile(this.path, JSON.stringify(prods));
                     console.log('Producto creado correctamente');
+                    return 'Producto cargado correctamente';
                 } else {
                     console.log('Producto ya existe en este array');
+                    return 'Producto ya existe en este array';
                 }
             } else {
-                console.log('Debe ingresar un producto con todas las propiedades');
+                console.log(`Faltan campos requeridos: ${missingFields.join(', ')}`);
+                return `Faltan campos requeridos: ${missingFields.join(', ')}`;
             }
         } catch (error) {
             console.error('Error al leer o parsear el archivo:', error.message);
@@ -86,6 +90,7 @@ export class ProductManager {
             }
         } catch (error) {
             console.error('Error al leer o parsear el archivo:', error.message);
+            throw error;
         }
     }
 
@@ -104,7 +109,7 @@ export class ProductManager {
             }
         } catch (error) {
             console.error('Error al leer o parsear el archivo:', error.message);
+            throw error;
         }
     }
 }
-
