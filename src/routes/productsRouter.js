@@ -6,21 +6,24 @@ const productsRouter = Router()
 
 productsRouter.get('/', async (req, res) => {
     try {
-        const { limit } = req.query;
-        const prods = await productManager.getProducts();
+        const { limit } = req.query
+        const prods = await productManager.getProducts()
+        let limite = parseInt(limit)
+        if (!limite)
+            limite = prods.length
+        const prodsLimit = prods.slice(0, limite)
+        res.status(200).render('templates/home', {
+            mostrarProductos: true,
+            productos: prodsLimit,
+            css: 'product.css'
+        })
 
-        let limite = parseInt(limit);
-
-        if (isNaN(limite) || limite <= 0) {
-            res.status(200).send(prods);
-        } else {
-            const prodsLimit = prods.slice(0, limite);
-            res.status(200).send(prodsLimit);
-        }
     } catch (error) {
-        res.status(500).send(`Error interno del servidor al consultar productos: ${error}`);
+        res.status(500).render('templates/error', {
+            error: error,
+        })
     }
-});
+})
 
 //: significa que es modificable (puede ser un 4 como un 10 como un 75)
 productsRouter.get('/:pid', async (req, res) => {

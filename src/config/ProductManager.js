@@ -1,115 +1,73 @@
-import { promises as fs } from 'fs';
-
+import { promises as fs } from 'fs'
+import crypto from 'crypto'
 export class ProductManager {
     constructor(path) {
-        this.path = path;
+        this.path = path //./products.json
     }
 
     async getProducts() {
-        try {
-            const fileContent = await fs.readFile(this.path, 'utf-8');
-            if (fileContent.trim() === '') {
-                console.log('El archivo está vacío.');
-            } else {
-                const prods = JSON.parse(fileContent);
-                return prods;
-            }
-        } catch (error) {
-            console.error('Error al leer o parsear el archivo:', error.message);
-        }
+        const prods = JSON.parse(await fs.readFile(this.path, 'utf-8'))
+        return prods
     }
 
     async getProductById(id) {
-        try {
-            const fileContent = await fs.readFile(this.path, 'utf-8');
-            const prods = JSON.parse(fileContent);
-            const prod = prods.find(producto => producto.id === id);
-            if (prod) {
-                return prod;
-            } else {
-                return 'Producto no existe';
-            }
-        } catch (error) {
-            return 'Error al leer o parsear el archivo:', error.message;
-        }
+        const prods = JSON.parse(await fs.readFile(this.path, 'utf-8'))
+        const prod = prods.find(producto => producto.id === id)
+
+        return prod
+
     }
 
     async addProduct(newProduct) {
-        try {
-            let fileContent = await fs.readFile(this.path, 'utf-8');
-            
-            if (!fileContent.trim()) {
-                fileContent = '[]';
-            }
-
-            const prods = JSON.parse(fileContent);
-
-            const requiredFields = ['code', 'title', 'description', 'price', 'stock'];
-
-            const missingFields = requiredFields.filter(field => !newProduct[field]);
-
-            if (missingFields.length === 0) {
-                const indice = prods.findIndex(prod => prod.code === newProduct.code);
-
-                if (indice === -1) {
-                    prods.push(newProduct);
-                    await fs.writeFile(this.path, JSON.stringify(prods));
-                    console.log('Producto creado correctamente');
-                    return 'Producto cargado correctamente';
-                } else {
-                    console.log('Producto ya existe en este array');
-                    return 'Producto ya existe en este array';
-                }
+        const prods = JSON.parse(await fs.readFile(this.path, 'utf-8'))
+        if (newProduct.title && newProduct.description && newProduct.price && newProduct.code && newProduct.stock) {
+            const indice = prods.findIndex(prod => prod.code === newProduct.code)
+            if (indice === -1) {
+                newProduct.id = crypto.randomBytes(10).toString('hex')
+                newProduct.status = true
+                if (!newProduct.thumbnail)
+                    newProduct.thumbnail = []
+                prods.push(newProduct)
+                await fs.writeFile(this.path, JSON.stringify(prods))
+                return 'Producto creado correctamente'
             } else {
-                console.log(`Faltan campos requeridos: ${missingFields.join(', ')}`);
-                return `Faltan campos requeridos: ${missingFields.join(', ')}`;
+                return 'Producto ya existe en este array'
             }
-        } catch (error) {
-            console.error('Error al leer o parsear el archivo:', error.message);
+        } else {
+            return 'Debe ingresar un producto con todas las propiedades'
         }
     }
 
     async updateProduct(id, nuevoProducto) {
-        try {
-            const fileContent = await fs.readFile(this.path, 'utf-8');
-            const prods = JSON.parse(fileContent);
-            const indice = prods.findIndex(producto => producto.id === id);
-
-            if (indice !== -1) {
-                prods[indice].stock = nuevoProducto.stock;
-                prods[indice].price = nuevoProducto.price;
-                prods[indice].title = nuevoProducto.title;
-                prods[indice].thumbnail = nuevoProducto.thumbnail;
-                prods[indice].description = nuevoProducto.description;
-                prods[indice].code = nuevoProducto.code;
-
-                await fs.writeFile(this.path, JSON.stringify(prods));
-                console.log('Producto actualizado correctamente');
-            } else {
-                console.log('Producto no existe');
-            }
-        } catch (error) {
-            console.error('Error al leer o parsear el archivo:', error.message);
-            throw error;
+        const prods = JSON.parse(await fs.readFile(this.path, 'utf-8'))
+        const indice = prods.findIndex(producto => producto.id === id)
+        if (indice != -1) {
+            prods[indice].stock = nuevoProducto.stock
+            prods[indice].price = nuevoProducto.price
+            prods[indice].title = nuevoProducto.title
+            prods[indice].thumbnail = nuevoProducto.thumbnail
+            prods[indice].description = nuevoProducto.description
+            prods[indice].code = nuevoProducto.code
+            await fs.writeFile(this.path, JSON.stringify(prods))
+            return 'Producto actualizado correctamente'
+        } else {
+            return 'Producto no existe'
         }
+
     }
 
     async deleteProduct(id) {
-        try {
-            const fileContent = await fs.readFile(this.path, 'utf-8');
-            const prods = JSON.parse(fileContent);
-            const indice = prods.findIndex(producto => producto.id === id);
-
-            if (indice !== -1) {
-                const prodsFiltrados = prods.filter(prod => prod.id !== id);
-                await fs.writeFile(this.path, JSON.stringify(prodsFiltrados));
-                console.log('Producto eliminado correctamente');
-            } else {
-                console.log('Producto no existe');
-            }
-        } catch (error) {
-            console.error('Error al leer o parsear el archivo:', error.message);
-            throw error;
+        const prods = JSON.parse(await fs.readFile(this.path, 'utf-8'))
+        const indice = prods.findIndex(producto => producto.id === id)
+        if (indice != -1) {
+            const prodsFiltrados = prods.filter(prod => prod.id != id)
+            await fs.writeFile(this.path, JSON.stringify(prodsFiltrados))
+            return 'Producto eliminado correctamente'
+        } else {
+            return 'Producto no existe'
         }
+
     }
+
+
 }
