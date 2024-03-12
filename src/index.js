@@ -6,6 +6,9 @@ import upload from './config/multer.js'
 import { Server } from 'socket.io'
 import { engine } from 'express-handlebars'
 import { __dirname } from './path.js'
+import mongoose from 'mongoose'
+import userRouter from './routes/userRouter.js'
+import messageModel from './models/message.js'
 
 //Configuraciones o declaraciones
 const app = express()
@@ -17,6 +20,11 @@ const server = app.listen(PORT, () => {
 })
 
 const io = new Server(server)
+
+//Coneccion a DB
+mongoose.connect("mongodb+srv://rodrigoelzoleon:coderhouse@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+.then(() => console.log("DB is connected"))
+.catch(e => console.log(e))
 
 //Middlewares
 app.use(express.json())
@@ -41,6 +49,7 @@ app.use('/public', express.static(__dirname + '/public'))
 app.use('/api/products', productsRouter, express.static(__dirname + '/public'))
 app.use('/api/cart', cartRouter)
 app.use('/api/chat', chatRouter, express.static(__dirname + '/public'))
+app.use('/api/users', userRouter)
 
 app.post('/upload', upload.single('product'), (req, res) => {
     try {
