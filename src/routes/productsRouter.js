@@ -1,5 +1,6 @@
 import { Router } from "express";
 import productModel from "../models/product.js";
+
 const productsRouter = Router();
 
 productsRouter.get("/", async (req, res) => {
@@ -23,9 +24,12 @@ productsRouter.get("/", async (req, res) => {
             page: pag,
             sort: ordQuery,
         });
-        n;
-        res.status(200).send(prods);
+
+        // Renderizar la vista de productos con los datos obtenidos
+        res.render("templates/home", { mostrarProductos: true, productos: prods });
+
     } catch (error) {
+        // Si hay un error, renderizar la vista de error
         res.status(500).render("templates/error", {
             error: error,
         });
@@ -47,6 +51,7 @@ productsRouter.get("/:pid", async (req, res) => {
             .send(`Error interno del servidor al consultar producto:${error}`);
     }
 });
+
 productsRouter.post("/", async (req, res) => {
     try {
         const newProduct = req.body;
@@ -74,6 +79,7 @@ productsRouter.put("/:pid", async (req, res) => {
             .send(`Error interno del servidor al consultar producto:${error}`);
     }
 });
+
 productsRouter.delete("/:pid", async (req, res) => {
     try {
         const idProducto = req.params.pid;
@@ -85,4 +91,5 @@ productsRouter.delete("/:pid", async (req, res) => {
             .send(`Error interno del servidor al consultar producto:${error}`);
     }
 });
+
 export default productsRouter;
