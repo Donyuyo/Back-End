@@ -23,7 +23,7 @@ const server = app.listen(PORT, () => {
 const io = new Server(server)
 
 //Coneccion a DB
-mongoose.connect("mongodb+srv://rodrigoelzoleon:coderhouse@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect("mongodb+srv://rodrigoelzoleon:@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
 .then(() => console.log("DB is connected"))
 .catch(e => console.log(e))
 
@@ -34,7 +34,7 @@ app.use(session({
     secret: "coderSecret",
     resave: true,
     store: MongoStore.create({
-        mongoUrl: "mongodb+srv://rodrigoelzoleon:coderhouse@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+        mongoUrl: "mongodb+srv://rodrigoelzoleon:@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
         ttl: 60 * 60
     }),
     saveUninitialized: true
@@ -48,6 +48,16 @@ initializePassport()
 app.use(passport.initialize())
 app.use(passport.session())
 
+// Route para productos
+app.get("/productos", async (req, res) => {
+    try {
+        const productos = await productModel.find({}).lean();
+        res.render("home", { productos }); 
+    } catch (error) {
+        console.error("Error al obtener productos:", error);
+        res.render("error", { error });
+    }
+});
 //Routes
 
 app.use('/', indexRouter)
