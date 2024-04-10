@@ -3,6 +3,10 @@ import passport from "passport";
 
 const sessionRouter = Router()
 
+sessionRouter.get('/login', (req, res) => {
+    res.render('templates/login');
+});
+
 sessionRouter.get('/login', passport.authenticate('login'), async (req, res) => {
     try {
         if (!req.user) {
@@ -21,6 +25,9 @@ sessionRouter.get('/login', passport.authenticate('login'), async (req, res) => 
     }
 })
 
+
+
+
 sessionRouter.post('/register', passport.authenticate('register'), async (req, res) => {
     try {
         if (!req.user) {
@@ -33,6 +40,9 @@ sessionRouter.post('/register', passport.authenticate('register'), async (req, r
         res.status(500).send("Error al registrar usuario")
     }
 })
+sessionRouter.get('/register', (req, res) => {
+    res.render('templates/register'); 
+});
 
 sessionRouter.get('/github', passport.authenticate('github', { scope: ['user:email'] }), async (req, res) => { r })
 
@@ -56,8 +66,11 @@ sessionRouter.get('/logout', (req, res) => {
     })
 })
 
-sessionRouter.get('/testJWT', passport.authenticate('jwt', { session: false }), (req, res) => {
+/*sessionRouter.get('/testJWT', passport.authenticate('jwt', { session: false }), (req, res) => {
     res.status(200).send(req.user)
-})
+})*/
+
+
+
 
 export default sessionRouter

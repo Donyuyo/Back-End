@@ -23,6 +23,7 @@ cartRouter.get("/:cid", async (req, res) => {
         res
             .status(500)
             .send(`internal error when reading products from cart: ${error}`);
+
     }
 });
 //Add or update a product in the cart
@@ -151,18 +152,17 @@ cartRouter.delete("/:cid", async (req, res) => {
         res.status(500).send(`Internal error : ${error}`);
     }
 });
+cartRouter.get('/', (req, res) => {
+    res.render('templates/cart'); 
+});
 cartRouter.get("/:cid", async (req, res) => {
     try {
         const cartId = req.params.cid;
         const cart = await cartModel
             .findOne({ _id: cartId })
             .populate("products.id_prod");
-        // Renderiza la vista del carrito con la información obtenida
-        res.render("templates/cart", { cart: cart });
     } catch (error) {
-        res
-            .status(500)
-            .send(`Error interno del servidor al leer el carrito: ${error}`);
+        res.status(500).send(`Error interno al leer el carrito: ${error}`);
     }
 });
 
