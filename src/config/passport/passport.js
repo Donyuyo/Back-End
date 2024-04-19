@@ -4,7 +4,7 @@ import crypto from 'crypto'
 import GithubStrategy from 'passport-github2'
 import { userModel } from '../../models/user.js'
 import { createHash, validatePassword } from '../../utils/bcrypt.js'
-//import { strategyJWT } from './strategies/jwtStrategy.js'
+import { strategyJWT } from './strategies/jwtStrategy.js'
 
 //Passport trabaje con uno o mas middlewares
 const localStrategy = local.Strategy
@@ -75,7 +75,7 @@ const initializePassport = () => {
         }
     }))
     
-    //passport.use('jwt', strategyJWT)
+    passport.use('jwt', strategyJWT)
 
 }
 export default initializePassport

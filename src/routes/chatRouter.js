@@ -1,9 +1,8 @@
 import { Router } from "express";
+import {renderChatView} from "../controllers/chatController.js";
 
-const chatRouter = Router()
+const chatRouter = Router();
 
-chatRouter.get('/', (req, res) => {
-    res.render("templates/chat", {})
-})
+chatRouter.get('/', renderChatView);
 
-export default chatRouter
+export default chatRouter;

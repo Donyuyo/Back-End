@@ -1,4 +1,4 @@
-/*import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
+import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 import { userModel } from "../../../models/user.js";
 
 const cookieExtractor = req => {
@@ -31,4 +31,4 @@ export const strategyJWT = new JwtStrategy(jwtOptions, async (payload, done) => 
     } catch (e) {
         return done(e, null)
     }
-})*/
+})

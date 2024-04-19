@@ -1,95 +1,16 @@
 import { Router } from "express";
-import productModel from "../models/product.js";
+import { getAllProducts, getProductById, createProduct, updateProductById, deleteProductById } from "../controllers/productsController.js";
 
 const productsRouter = Router();
 
-productsRouter.get("/", async (req, res) => {
-    try {
-        const { limit, page, filter, ord } = req.query;
-        let metFilter;
-        const pag = page !== undefined ? page : 1;
-        const limi = limit !== undefined ? limit : 10;
+productsRouter.get("/", getAllProducts);
 
-        if (filter == "true" || filter == "false") {
-            metFilter = "status";
-        } else {
-            if (filter !== undefined) metFilter = "category";
-        }
+productsRouter.get("/:pid", getProductById);
 
-        const query = metFilter != undefined ? { [metFilter]: filter } : {};
-        const ordQuery = ord !== undefined ? { price: ord } : {};
+productsRouter.post("/", createProduct);
 
-        const prods = await productModel.paginate(query, {
-            limit: limi,
-            page: pag,
-            sort: ordQuery,
-        });
+productsRouter.put("/:pid", updateProductById);
 
-        // Renderizar la vista de productos con los datos obtenidos
-        res.render("templates/home", { mostrarProductos: true, productos: prods });
-
-    } catch (error) {
-        // Si hay un error, renderizar la vista de error
-        res.status(500).render("templates/error", {
-            error: error,
-        });
-    }
-});
-
-productsRouter.get("/:pid", async (req, res) => {
-    try {
-        const idProducto = req.params.pid;
-        const prod = await productModel.findById(idProducto);
-        if (prod) {
-            res.status(200).send(prod);
-        } else {
-            res.status(404).send("Producto no existe");
-        }
-    } catch (error) {
-        res
-            .status(500)
-            .send(`Error interno del servidor al consultar producto:${error}`);
-    }
-});
-
-productsRouter.post("/", async (req, res) => {
-    try {
-        const newProduct = req.body;
-        const mensaje = await productModel.create(newProduct);
-        res.status(201).send(mensaje);
-    } catch (error) {
-        res
-            .status(500)
-            .send(`Error interno del servidor al consultar producto:${error}`);
-    }
-});
-
-productsRouter.put("/:pid", async (req, res) => {
-    try {
-        const idProducto = req.params.pid;
-        const updatedProduct = req.body;
-        const prod = await productModel.findByIdAndUpdate(
-            idProducto,
-            updatedProduct
-        );
-        res.status(200).send(prod);
-        } catch (error) {
-        res
-            .status(500)
-            .send(`Error interno del servidor al consultar producto:${error}`);
-    }
-});
-
-productsRouter.delete("/:pid", async (req, res) => {
-    try {
-        const idProducto = req.params.pid;
-        const mensaje = await productModel.findByIdAndDelete(idProducto);
-        res.status(200).send(mensaje);
-    } catch (error) {
-        res
-            .status(500)
-            .send(`Error interno del servidor al consultar producto:${error}`);
-    }
-});
+productsRouter.delete("/:pid", deleteProductById);
 
 export default productsRouter;

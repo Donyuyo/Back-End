@@ -1,76 +1,23 @@
 import { Router } from "express";
 import passport from "passport";
-
-const sessionRouter = Router()
-
-sessionRouter.get('/login', (req, res) => {
-    res.render('templates/login');
-});
-
-sessionRouter.get('/login', passport.authenticate('login'), async (req, res) => {
-    try {
-        if (!req.user) {
-            return res.status(401).send("Usuario o contraseña no validos")
-        }
-
-        req.session.user = {
-            email: req.user.email,
-            first_name: req.user.first_name
-        }
-
-        res.status(200).send("Usuario logueado correctamente")
-
-    } catch (e) {
-        res.status(500).send("Error al loguear usuario")
-    }
-})
+import sessionController from "../controllers/sessionController.js";
 
 
+const sessionRouter = Router();
 
+sessionRouter.get('/login', sessionController.renderLoginPage);
+sessionRouter.post('/login', sessionController.login);
 
-sessionRouter.post('/register', passport.authenticate('register'), async (req, res) => {
-    try {
-        if (!req.user) {
-            return res.status(400).send("Usuario ya existente en la aplicacion")
-        }
+sessionRouter.post('/register', sessionController.register);
+sessionRouter.get('/register', sessionController.renderRegisterPage);
 
-        res.status(200).send("Usuario creado correctamente")
+sessionRouter.get('/github', sessionController.githubAuth);
+sessionRouter.get('/github/callback', sessionController.githubAuthCallback);
 
-    } catch (e) {
-        res.status(500).send("Error al registrar usuario")
-    }
-})
-sessionRouter.get('/register', (req, res) => {
-    res.render('templates/register'); 
-});
+sessionRouter.get('/current', sessionController.getCurrentUser);
 
-sessionRouter.get('/github', passport.authenticate('github', { scope: ['user:email'] }), async (req, res) => { r })
+sessionRouter.get('/logout', sessionController.logout);
 
-sessionRouter.get('/githubSession', passport.authenticate('github'), async (req, res) => {
-    console.log(req)
-    req.session.user = {
-        email: req.user.email,
-        first_name: req.user.name
-    }
-    res.redirect('/')
-})
+sessionRouter.get('/testJWT', sessionController.testJWT);
 
-sessionRouter.get('/logout', (req, res) => {
-    req.session.destroy(function (e) {
-        if (e) {
-            console.log(e)
-        } else {
-            res.status(200).redirect("/")
-        }
-
-    })
-})
-
-/*sessionRouter.get('/testJWT', passport.authenticate('jwt', { session: false }), (req, res) => {
-    res.status(200).send(req.user)
-})*/
-
-
-
-
-export default sessionRouter
+export default sessionRouter;
