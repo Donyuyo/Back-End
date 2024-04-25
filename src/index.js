@@ -1,3 +1,4 @@
+import varenv from './dotenv.js'
 import express from 'express'
 import mongoose from 'mongoose'
 import session from 'express-session'
@@ -23,7 +24,7 @@ const server = app.listen(PORT, () => {
 const io = new Server(server)
 
 //Coneccion a DB
-mongoose.connect("mongodb+srv://rodrigoelzoleon:PASS@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+mongoose.connect(varenv.mongo_url)
 .then(() => console.log("DB is connected"))
 .catch(e => console.log(e))
 
@@ -31,15 +32,15 @@ mongoose.connect("mongodb+srv://rodrigoelzoleon:PASS@cluster0.2okvl4z.mongodb.ne
 app.use(express.json())
 
 app.use(session({
-    secret: "coderSecret",
+    secret: varenv.session_secret,
     resave: true,
     store: MongoStore.create({
-        mongoUrl: "mongodb+srv://rodrigoelzoleon:PASS@cluster0.2okvl4z.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+        mongoUrl: varenv.mongo_url,
         ttl: 60 * 60
     }),
     saveUninitialized: true
 }))
-app.use(cookieParser("claveSecreta"))
+app.use(cookieParser(varenv.cookies_secret))
 app.engine('handlebars', engine())
 app.set('view engine', 'handlebars')
 app.set('views', __dirname + '/views')
