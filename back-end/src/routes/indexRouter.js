@@ -7,6 +7,7 @@ import sessionRouter from './sessionRouter.js'
 import express from 'express'
 import { __dirname } from '../path.js'
 import multerRouter from './multerRouter.js'
+import mockingRouter from './mockingRouter.js';
 
 const indexRouter = express.Router()
 
@@ -21,5 +22,6 @@ indexRouter.use('/api/chat', chatRouter, express.static(__dirname + '/public'))
 indexRouter.use('/api/users', userRouter)
 indexRouter.use('/api/session', sessionRouter)
 indexRouter.use('/upload', multerRouter)
+indexRouter.use('/api', mockingRouter);
 
 export default indexRouter
