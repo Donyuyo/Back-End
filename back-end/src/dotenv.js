@@ -9,7 +9,8 @@ const varenv = {
     jwt_secret: process.env.JWT_SECRET,
     salt: process.env.SALT,
     github_clientId : process.env.GITHUB_CLIENT_ID,
-    github_clientSecret: process.env.GITHUB_CLIENT_SECRET
+    github_clientSecret: process.env.GITHUB_CLIENT_SECRET,
+    logger_env: process.env.LOGGER_ENV, 
 }
 
 export default varenv

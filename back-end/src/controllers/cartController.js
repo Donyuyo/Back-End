@@ -1,28 +1,34 @@
+import logger from "../utils/logger.js";
 import cartModel from "../models/cart.js";
 import productModel from "../models/product.js";
 import ticketModel from "../models/ticket.js";
-const createCart = async (req, res) => {
+
+export const createCart = async (req, res) => {
     try {
         const mensaje = await cartModel.create({ products: [] });
         res.status(201).send(mensaje);
+        logger.info('Carrito creado correctamente');
     } catch (error) {
-        res.status(500).send(`Internal error when creating cart: ${error}`);
+        res.status(500).send(`Error interno al crear el carrito: ${error}`);
+        logger.error('Error al crear el carrito', { error });
     }
 };
 
-const getCartById = async (req, res) => {
+export const getCartById = async (req, res) => {
     try {
         const cartId = req.params.cid;
         const cart = await cartModel
             .findOne({ _id: cartId })
             .populate("products.id_prod");
         res.status(200).send(cart);
+        logger.debug('Carrito obtenido correctamente por ID');
     } catch (error) {
-        res.status(500).send(`Internal error when reading products from cart: ${error}`);
+        res.status(500).send(`Error interno al leer los productos del carrito: ${error}`);
+        logger.error('Error al obtener carrito por ID', { error });
     }
 };
 
-const addOrUpdateProduct = async (req, res) => {
+export const addOrUpdateProduct = async (req, res) => {
     try {
         if(req.user.rol == "User"){
             const cartId = req.params.cid;
@@ -49,15 +55,18 @@ const addOrUpdateProduct = async (req, res) => {
             } else {
                 res.status(200).send(updatedCart);
             }
+            logger.info('Producto añadido o actualizado en el carrito');
         }else {
             res.status(403).send("Usuario no autorizado")
+            logger.warn('Intento de añadir producto por un usuario no autorizado');
         }
     } catch (error) {
-        res.status(500).send(`Internal error when adding/updating product in cart: ${error}`);
+        res.status(500).send(`Error interno al añadir/actualizar producto en el carrito: ${error}`);
+        logger.error('Error al añadir/actualizar producto en el carrito', { error });
     }
 };
 
-const deleteProduct = async (req, res) => {
+export const deleteProduct = async (req, res) => {
     try {
         const cartId = req.params.cid;
         const productId = req.params.pid;
@@ -70,15 +79,18 @@ const deleteProduct = async (req, res) => {
 
         if (updatedCart) {
             res.status(200).send(updatedCart);
+            logger.info('Producto eliminado del carrito');
         } else {
-            res.status(404).send("Cart not found");
+            res.status(404).send("Carrito no encontrado");
+            logger.warn('Intento de eliminar producto de un carrito no encontrado');
         }
     } catch (error) {
-        res.status(500).send(`Internal error when deleting product from cart: ${error}`);
+        res.status(500).send(`Error interno al eliminar producto del carrito: ${error}`);
+        logger.error('Error al eliminar producto del carrito', { error });
     }
 };
 
-const updateCart = async (req, res) => {
+export const updateCart = async (req, res) => {
     try {
         const cartId = req.params.cid;
         const newProducts = req.body;
@@ -88,16 +100,19 @@ const updateCart = async (req, res) => {
             { new: true }
         );
         if (!updatedCart) {
-            return res.status(404).send("Cart not found");
+            return res.status(404).send("Carrito no encontrado");
+            logger.warn('Intento de actualizar un carrito no encontrado');
         }
 
         res.status(200).send(updatedCart);
+        logger.info('Carrito actualizado correctamente');
     } catch (error) {
-        res.status(500).send(`Internal error when updating cart: ${error}`);
+        res.status(500).send(`Error interno al actualizar el carrito: ${error}`);
+        logger.error('Error al actualizar el carrito', { error });
     }
 };
 
-const deleteCart = async (req, res) => {
+export const deleteCart = async (req, res) => {
     try {
         const cartId = req.params.cid;
 
@@ -108,12 +123,15 @@ const deleteCart = async (req, res) => {
         );
 
         if (!updatedCart) {
-            return res.status(404).send("Cart not found");
+            return res.status(404).send("Carrito no encontrado");
+            logger.warn('Intento de eliminar un carrito no encontrado');
         }
 
-        res.status(200).send("Cart removed!");
+        res.status(200).send("Carrito eliminado!");
+        logger.info('Carrito eliminado correctamente');
     } catch (error) {
-        res.status(500).send(`Internal error when deleting cart: ${error}`);
+        res.status(500).send(`Error interno al eliminar el carrito: ${error}`);
+        logger.error('Error al eliminar el carrito', { error });
     }
 };
 
@@ -148,6 +166,7 @@ export const createTicket = async (req, res) => {
                 );
 
                 res.status(200).send(newTicket);
+                logger.info('Ticket creado correctamente');
             } else {
                 // Eliminar productos sin stock del carrito
                 await Promise.all(prodSinStock.map(async (prod) => {
@@ -159,14 +178,16 @@ export const createTicket = async (req, res) => {
                 }));
                 
                 res.status(400).send("Algunos productos no tienen stock suficiente");
+                logger.warn('Algunos productos no tienen stock suficiente');
             }
         } else {
             res.status(404).send("Carrito no existe");
+            logger.warn('Intento de crear ticket para un carrito que no existe');
         }
     } catch (error) {
         res.status(500).send(`Error interno del servidor: ${error}`);
+        logger.error('Error interno al crear ticket', { error });
     }
 };
-
 
 export default {createCart,getCartById,addOrUpdateProduct,deleteProduct,updateCart,deleteCart, createTicket};

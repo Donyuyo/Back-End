@@ -1,11 +1,12 @@
-import upload from '../config/multer.js'
+import upload from '../config/multer.js';
+import logger from '../utils/logger.js';
 
 export const insertImg = (req, res) => {
     try {
-        console.log(req.file)
-        res.status(200).send("Imagen cargada correctamente")
+        logger.debug(`Uploaded file: ${JSON.stringify(req.file)}`);
+        res.status(200).send("Imagen cargada correctamente");
     } catch (e) {
-        res.status(500).send("Error al cargar imagen")
+        logger.error(`Error uploading image: ${e}`);
+        res.status(500).send("Error al cargar imagen");
     }
-
-}
+};
