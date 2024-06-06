@@ -23,10 +23,10 @@ const userSchema = new Schema({
         unique: true,
         index: true
     },
-    rol: {
-        type: String,
-        default: "User"
-    },
+    rol: { type: String, 
+        default: 'User', 
+        enum: ['User', 'Admin', 'Premium'] },
+
     cart_id: {
         type: Schema.Types.ObjectId,
         ref: 'carts'

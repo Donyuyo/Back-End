@@ -1,12 +1,17 @@
 import passport from "passport";
-import logger from "../utils/logger.js";  // Asegúrate de usar la extensión .js si tu archivo de logger tiene esa extensión.
+import logger from "../utils/logger.js"; 
+import { sendEmailChangePassword } from "../utils/nodemailer.js";
+import jwt from 'jsonwebtoken';
+import { userModel } from "../models/user.js"
+import varenv from "../dotenv.js";
+import {validatePassword, createHash} from '../utils/bcrypt.js'
 
-const renderLoginPage = (req, res) => {
+const renderLoginPage = async (req, res) => {
     res.render('templates/login');
     logger.info('Rendered login page');
 };
 
-const login = (req, res, next) => {
+const login = async (req, res, next) => {
     passport.authenticate('login', (err, user, info) => {
         try {
             if (err || !user) {
@@ -32,7 +37,7 @@ const login = (req, res, next) => {
     })(req, res, next);
 };
 
-const register = (req, res, next) => {
+const register = async (req, res, next) => {
     passport.authenticate('register', (err, user, info) => {
         try {
             if (err || !user) {
@@ -54,24 +59,29 @@ const register = (req, res, next) => {
     })(req, res, next);
 };
 
-const renderRegisterPage = (req, res) => {
+const renderRegisterPage = async (req, res) => {
     res.render('templates/register');
     logger.info('Rendered register page');
 };
 
-const githubAuth = passport.authenticate('github', { scope: ['user:email'] });
+const githubAuth = async (req,res)=>{
+    passport.authenticate('github', { scope: ['user:email'] });
+};
 
-const githubAuthCallback = passport.authenticate('github', {
+
+
+const githubAuthCallback = async (req,res)=>{ passport.authenticate('github', {
     successRedirect: '/',
     failureRedirect: '/login'
-});
+})
+};
 
-const getCurrentUser = (req, res) => {
+const getCurrentUser = async (req, res) => {
     logger.info('Fetched current user', { user: req.user });
     res.status(200).send("Usuario Logeado");
 };
 
-const logout = (req, res) => {
+const logout = async (req, res) => {
     req.session.destroy((err) => {
         if (err) {
             logger.error('Error during logout', { error: err });
@@ -82,7 +92,7 @@ const logout = (req, res) => {
     });
 };
 
-const testJWT = (req, res, next) => {
+const testJWT = async (req, res, next) => {
     passport.authenticate('jwt', { session: false }, (err, user) => {
         logger.debug('Test JWT', { user: req.user });
         if (req.user.rol == 'User') {
@@ -95,4 +105,56 @@ const testJWT = (req, res, next) => {
     })(req, res, next);
 };
 
-export default { renderLoginPage, login, register, renderRegisterPage, githubAuth, githubAuthCallback, getCurrentUser, logout, testJWT };
+const changePassword = async (req, res) => {
+    const { token } = req.params;
+    const { newPassword } = req.body;
+    try {
+        const validateToken = jwt.verify(token.substr(6), varenv.jwt_secret);
+        const user = await userModel.findOne({ email: validateToken.userEmail });
+        if (user) {
+            if (!validatePassword(newPassword, user.password)) {
+                const hashPassword = createHash(newPassword);
+                user.password = hashPassword;
+                const resultado = await userModel.findByIdAndUpdate(user._id, user);
+                logger.info('Password changed successfully', { user: user.email });
+                res.status(200).send("Contraseña modificada correctamente");
+            } else {
+                logger.warn('New password cannot be the same as the old password', { user: user.email });
+                res.status(400).send("Contraseña no puede ser identica a la anterior");
+            }
+        } else {
+            logger.warn('User not found for password change', { email: validateToken.userEmail });
+            res.status(404).send("No se encontró este usuario");
+        }
+    } catch (e) {
+        if (e?.message == 'jwt expired') {
+            logger.warn('Password change token expired', { token });
+            res.status(400).send("Tiempo expirado para cambio de contraseña");
+        } else {
+            logger.error('Error during password change', { error: e });
+            res.status(500).send(e);
+        }
+    }
+};
+
+const sendEmailPassword = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await userModel.findOne({ email });
+        if (user) {
+            const token = jwt.sign({ userEmail: email }, varenv.jwt_secret, { expiresIn: '1h' });
+            const resetLink = `http://localhost:8000/api/session/reset-password/token=${token}`;
+            await sendEmailChangePassword(email, resetLink);
+            logger.info('Password reset email sent', { email });
+            res.status(200).send("Email enviado correctamente");
+        } else {
+            logger.warn('User not found for password reset email', { email });
+            res.status(400).send("Usuario no encontrado");
+        }
+    } catch (e) {
+        logger.error('Error sending password reset email', { error: e });
+        res.status(500).send(e);
+    }
+};
+
+export default { renderLoginPage, login, register, renderRegisterPage, githubAuth, githubAuthCallback, getCurrentUser, logout, testJWT, sendEmailPassword,changePassword };

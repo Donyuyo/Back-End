@@ -2,6 +2,7 @@ import logger from "../utils/logger.js";
 import cartModel from "../models/cart.js";
 import productModel from "../models/product.js";
 import ticketModel from "../models/ticket.js";
+import { userModel } from "../models/user.js";
 
 export const createCart = async (req, res) => {
     try {
@@ -30,21 +31,21 @@ export const getCartById = async (req, res) => {
 
 export const addOrUpdateProduct = async (req, res) => {
     try {
-        if(req.user.rol == "User"){
+        if (req.user.rol === "User" || req.user.rol === "Premium") {
             const cartId = req.params.cid;
             const productId = req.params.pid;
             let { quantity } = req.body;
-    
+
             if (quantity === undefined) {
                 quantity = 1;
             }
-    
+
             const updatedCart = await cartModel.findOneAndUpdate(
                 { _id: cartId, "products.id_prod": productId },
                 { $inc: { "products.$.quantity": quantity } },
                 { new: true }
             );
-    
+
             if (!updatedCart) {
                 const cart = await cartModel.findByIdAndUpdate(
                     cartId,
@@ -56,8 +57,8 @@ export const addOrUpdateProduct = async (req, res) => {
                 res.status(200).send(updatedCart);
             }
             logger.info('Producto añadido o actualizado en el carrito');
-        }else {
-            res.status(403).send("Usuario no autorizado")
+        } else {
+            res.status(403).send("Usuario no autorizado");
             logger.warn('Intento de añadir producto por un usuario no autorizado');
         }
     } catch (error) {
@@ -142,15 +143,21 @@ export const createTicket = async (req, res) => {
         const prodSinStock = [];
 
         if (cart) {
-            cart.products.forEach(async (prod) => {
+            for (const prod of cart.products) {
                 let producto = await productModel.findById(prod.id_prod);
                 if (producto.stock - prod.quantity < 0) {
                     prodSinStock.push(producto);
                 }
-            });
+            }
 
             if (prodSinStock.length == 0) {
-                const totalPrice = cart.products.reduce((a, b) => (a.price* a.quantity)+(b.price*b.quantity), 0);
+                const user = await userModel.findById(req.user._id);
+                let totalPrice = cart.products.reduce((total, prod) => total + (prod.price * prod.quantity), 0);
+
+                if (user.rol === 'Premium') {
+                    totalPrice *= 0.9; // Apply 10% discount
+                }
+
                 const newTicket = await ticketModel.create({
                     code: crypto.randomUUID(),
                     purchaser: req.user.email,
@@ -190,4 +197,4 @@ export const createTicket = async (req, res) => {
     }
 };
 
-export default {createCart,getCartById,addOrUpdateProduct,deleteProduct,updateCart,deleteCart, createTicket};
+export default { createCart, getCartById, addOrUpdateProduct, deleteProduct, updateCart, deleteCart, createTicket };
