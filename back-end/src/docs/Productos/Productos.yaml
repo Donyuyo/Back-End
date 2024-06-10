@@ -1,0 +1,115 @@
+paths:
+  /products:
+    get:
+      summary: Obtiene todos los productos
+      tags:
+        - Productos
+      responses:
+        '200':
+          description: Lista de productos obtenida correctamente
+        '500':
+          description: Error interno al obtener los productos
+
+    post:
+      summary: Crea un nuevo producto
+      tags:
+        - Productos
+      security:
+        - bearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nombre del producto
+                price:
+                  type: number
+                  description: Precio del producto
+                stock:
+                  type: number
+                  description: Stock del producto
+      responses:
+        '201':
+          description: Producto creado correctamente
+        '500':
+          description: Error interno al crear el producto
+
+  /products/{pid}:
+    get:
+      summary: Obtiene un producto por ID
+      tags:
+        - Productos
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      responses:
+        '200':
+          description: Producto obtenido correctamente
+        '404':
+          description: Producto no encontrado
+        '500':
+          description: Error interno al obtener el producto
+
+    put:
+      summary: Actualiza un producto
+      tags:
+        - Productos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Nombre del producto
+                price:
+                  type: number
+                  description: Precio del producto
+                stock:
+                  type: number
+                  description: Stock del producto
+      responses:
+        '200':
+          description: Producto actualizado correctamente
+        '404':
+          description: Producto no encontrado
+        '500':
+          description: Error interno al actualizar el producto
+
+    delete:
+      summary: Elimina un producto
+      tags:
+        - Productos
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      responses:
+        '200':
+          description: Producto eliminado correctamente
+        '404':
+          description: Producto no encontrado
+        '500':
+          description: Error interno al eliminar el producto

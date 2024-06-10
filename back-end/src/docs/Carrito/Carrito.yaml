@@ -1,0 +1,152 @@
+paths:
+  /carts:
+    post:
+      summary: Crea un nuevo carrito
+      tags:
+        - Carritos
+      responses:
+        '201':
+          description: Carrito creado correctamente
+        '500':
+          description: Error interno al crear el carrito
+
+  /carts/{cid}:
+    get:
+      summary: Obtiene un carrito por ID
+      tags:
+        - Carritos
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+      responses:
+        '200':
+          description: Carrito obtenido correctamente
+        '500':
+          description: Error interno al obtener el carrito
+
+    put:
+      summary: Actualiza un carrito
+      tags:
+        - Carritos
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  id_prod:
+                    type: string
+                    description: ID del producto
+                  quantity:
+                    type: integer
+                    description: Cantidad del producto
+      responses:
+        '200':
+          description: Carrito actualizado correctamente
+        '500':
+          description: Error interno al actualizar el carrito
+
+    delete:
+      summary: Elimina un carrito
+      tags:
+        - Carritos
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+      responses:
+        '200':
+          description: Carrito eliminado correctamente
+        '500':
+          description: Error interno al eliminar el carrito
+
+  /carts/{cid}/{pid}:
+    post:
+      summary: Añade o actualiza un producto en el carrito
+      tags:
+        - Carritos
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  description: Cantidad del producto
+      responses:
+        '200':
+          description: Producto añadido o actualizado correctamente en el carrito
+        '500':
+          description: Error interno al añadir/actualizar producto en el carrito
+
+  /carts/{cid}/products/{pid}:
+    delete:
+      summary: Elimina un producto del carrito
+      tags:
+        - Carritos
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+        - in: path
+          name: pid
+          required: true
+          schema:
+            type: string
+          description: ID del producto
+      responses:
+        '200':
+          description: Producto eliminado del carrito
+        '500':
+          description: Error interno al eliminar producto del carrito
+
+  /carts/{cid}/purchase:
+    post:
+      summary: Crea un ticket de compra para el carrito
+      tags:
+        - Carritos
+      parameters:
+        - in: path
+          name: cid
+          required: true
+          schema:
+            type: string
+          description: ID del carrito
+      responses:
+        '200':
+          description: Ticket de compra creado correctamente
+        '500':
+          description: Error interno al crear ticket de compra

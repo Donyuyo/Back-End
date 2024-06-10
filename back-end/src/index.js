@@ -12,6 +12,9 @@ import { Server } from 'socket.io';
 import { engine } from 'express-handlebars';
 import { __dirname } from './path.js';
 import logger from '../src/utils/logger.js';
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUiExpress from 'swagger-ui-express';
+import productModel from './models/product.js';
 
 // Configuraciones o declaraciones
 const app = express();
@@ -60,6 +63,21 @@ app.get("/productos", async (req, res) => {
         res.render("error", { error });
     }
 });
+
+// Documentación Swagger
+const swaggerOptions = {
+    definition: {
+        openapi: '3.1.0',
+        info: {
+            title: 'Documentacion de mi aplicacion',
+            description: 'Descripcion de documentacion'
+        }
+    },
+    apis: [`${__dirname}/docs/**/*.yaml`]
+};
+
+const specs = swaggerJSDoc(swaggerOptions);
+app.use('/apidocs', swaggerUiExpress.serve, swaggerUiExpress.setup(specs));
 
 // Routes
 app.use('/', indexRouter);
@@ -118,3 +136,5 @@ io.on("connection", (socket) => {
         }
     });
 });
+
+export default app;
