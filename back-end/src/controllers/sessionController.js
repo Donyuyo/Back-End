@@ -82,6 +82,9 @@ const getCurrentUser = async (req, res) => {
 };
 
 const logout = async (req, res) => {
+    const user = await userModel.findOne({email : req.session.user.email})
+    user.last_connection = new Date()
+    await user.save()
     req.session.destroy((err) => {
         if (err) {
             logger.error('Error during logout', { error: err });

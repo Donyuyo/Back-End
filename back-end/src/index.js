@@ -40,7 +40,7 @@ app.use(session({
     resave: true,
     store: MongoStore.create({
         mongoUrl: varenv.mongo_url,
-        ttl: 60 * 60
+        ttl: 60 * 60    
     }),
     saveUninitialized: true
 }));

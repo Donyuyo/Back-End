@@ -12,10 +12,6 @@ const localStrategy = local.Strategy
 
 const initializePassport = () => {
     //Definir en que rutas se aplican mis estrategias
-
-
-
-
     passport.use('register', new localStrategy({ passReqToCallback: true, usernameField: 'email' }, async (req, username, password, done) => {
         try {
             const { first_name, last_name, email, password, age } = req.body
@@ -44,8 +40,10 @@ const initializePassport = () => {
 
     passport.use('login', new localStrategy({ usernameField: 'email' }, async (username, password, done) => {
         try {
-            const user = await userModel.findOne({ email: username }).lean()
+            const user = await userModel.findOne({ email: username })
             if (user && validatePassword(password, user.password)) {
+                user.last_connection =  new Date()
+                await user.save()
                 return done(null, user)
             } else {
                 return done(null, false)

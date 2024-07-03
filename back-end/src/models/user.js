@@ -23,13 +23,22 @@ const userSchema = new Schema({
         unique: true,
         index: true
     },
-    rol: { type: String, 
+    rol: { 
+        type: String, 
         default: 'User', 
         enum: ['User', 'Admin', 'Premium'] },
 
     cart_id: {
         type: Schema.Types.ObjectId,
         ref: 'carts'
+    },
+    documens: {
+        type: Object,
+        default: [],
+    },
+    last_connection:{
+        type: Date,
+        
     }
 })
 
