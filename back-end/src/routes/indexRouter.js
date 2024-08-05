@@ -16,7 +16,7 @@ indexRouter.get('/', (req, res) => {
     res.status(200).send("Bienvenido/a!");
 });
 indexRouter.use('/public', express.static(__dirname + '/public'));
-indexRouter.use('/api/products', productsRouter, express.static(__dirname + '/public'));
+indexRouter.use('/api/products', productsRouter);
 indexRouter.use('/api/cart', cartRouter);
 indexRouter.use('/api/chat', chatRouter, express.static(__dirname + '/public'));
 indexRouter.use('/api/users', userRouter);

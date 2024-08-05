@@ -15,10 +15,18 @@ import logger from '../src/utils/logger.js';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUiExpress from 'swagger-ui-express';
 import productModel from './models/product.js';
+import cors from 'cors'
 
 // Configuraciones o declaraciones
 const app = express();
 const PORT = 8000;
+
+
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true
+}));
 
 // Server
 const server = app.listen(PORT, () => {

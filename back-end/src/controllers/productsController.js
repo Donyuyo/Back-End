@@ -1,7 +1,6 @@
 import productModel from "../models/product.js";
 import logger from "../utils/logger.js";
 
-// Controlador para obtener todos los productos
 export const getAllProducts = async (req, res) => {
     try {
         const { limit, page, filter, ord } = req.query;
@@ -9,7 +8,7 @@ export const getAllProducts = async (req, res) => {
         const pag = page !== undefined ? page : 1;
         const limi = limit !== undefined ? limit : 10;
 
-        if (filter == "true" || filter == "false") {
+        if (filter === "true" || filter === "false") {
             metFilter = "status";
         } else {
             if (filter !== undefined) metFilter = "category";
@@ -24,18 +23,15 @@ export const getAllProducts = async (req, res) => {
             sort: ordQuery,
         });
 
+       
+        res.status(200).json(prods);
         logger.info('Fetched products successfully', { query, ordQuery, limit: limi, page: pag });
-        // Renderizar la vista de productos con los datos obtenidos
-        res.render("templates/home", { mostrarProductos: true, productos: prods });
-
     } catch (error) {
         logger.error('Error fetching products', { error });
-        // Si hay un error, renderizar la vista de error
-        res.status(500).render("templates/error", {
-            error: error,
-        });
+        res.status(500).json({ error: `Error fetching products: ${error}` });
     }
 };
+
 
 // Controlador para obtener un producto por su ID
 export const getProductById = async (req, res) => {
@@ -44,14 +40,14 @@ export const getProductById = async (req, res) => {
         const prod = await productModel.findById(idProducto);
         if (prod) {
             logger.info('Product fetched by ID', { idProducto });
-            res.status(200).send(prod);
+            res.status(200).json(prod);
         } else {
             logger.warn('Product not found by ID', { idProducto });
-            res.status(404).send("Producto no existe");
+            res.status(404).json("Producto no existe");
         }
     } catch (error) {
         logger.error('Error fetching product by ID', { error });
-        res.status(500).send(`Error interno del servidor al consultar producto: ${error}`);
+        res.status(500).json(`Error interno del servidor al consultar producto: ${error}`);
     }
 };
 
@@ -63,14 +59,14 @@ export const createProduct = async (req, res) => {
             const product = req.body;
             const mensaje = await productModel.create(product);
             logger.info('Product created', { product });
-            res.status(201).send(mensaje);
+            res.status(201).json(mensaje);
         } else {
             logger.warn('Unauthorized user attempting to create product', { user: req.user });
-            res.status(403).send("Usuario no autorizado");
+            res.status(403).json("Usuario no autorizado");
         }
     } catch (error) {
         logger.error('Error creating product', { error });
-        res.status(500).send(`Error interno del servidor al crear producto: ${error}`);
+        res.status(500).json(`Error interno del servidor al crear producto: ${error}`);
     }
 };
 
@@ -81,14 +77,14 @@ export const updateProduct = async (req, res) => {
             const updateProduct = req.body;
             const prod = await productModel.findByIdAndUpdate(idProducto, updateProduct);
             logger.info('Product updated', { idProducto, updateProduct });
-            res.status(200).send(prod);
+            res.status(200).json(prod);
         } else {
             logger.warn('Unauthorized user attempting to update product', { user: req.user });
-            res.status(403).send("Usuario no autorizado");
+            res.status(403).json("Usuario no autorizado");
         }
     } catch (error) {
         logger.error('Error updating product', { error });
-        res.status(500).send(`Error interno del servidor al actualizar producto: ${error}`);
+        res.status(500).json(`Error interno del servidor al actualizar producto: ${error}`);
     }
 };
 
@@ -99,13 +95,13 @@ export const deleteProduct = async (req, res) => {
             const idProducto = req.params.pid;
             const mensaje = await productModel.findByIdAndDelete(idProducto);
             logger.info('Product deleted', { idProducto });
-            res.status(200).send(mensaje);
+            res.status(200).json(mensaje);
         } else {
             logger.warn('Unauthorized user attempting to delete product', { user: req.user });
-            res.status(403).send("Usuario no autorizado");
+            res.status(403).json("Usuario no autorizado");
         }
     } catch (error) {
         logger.error('Error deleting product', { error });
-        res.status(500).send(`Error interno del servidor al eliminar producto: ${error}`);
+        res.status(500).json(`Error interno del servidor al eliminar producto: ${error}`);
     }
 };

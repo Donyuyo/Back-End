@@ -6,11 +6,11 @@ import { userModel } from "../models/user.js";
 
 export const createCart = async (req, res) => {
     try {
-        const mensaje = await cartModel.create({ products: [] });
-        res.status(201).send(mensaje);
+        const cart = await cartModel.create({ products: [] });
+        res.status(201).json(cart);
         logger.info('Carrito creado correctamente');
     } catch (error) {
-        res.status(500).send(`Error interno al crear el carrito: ${error}`);
+        res.status(500).json({ message: "Error al crear el carrito", error: error.message });
         logger.error('Error al crear el carrito', { error });
     }
 };
@@ -21,57 +21,46 @@ export const getCartById = async (req, res) => {
         const cart = await cartModel
             .findOne({ _id: cartId })
             .populate("products.id_prod");
-        res.status(200).send(cart);
-        logger.debug('Carrito obtenido correctamente por ID');
+        res.status(200).json(cart);
+        logger.info('Carrito obtenido correctamente por ID', { id: cartId });
     } catch (error) {
-        res.status(500).send(`Error interno al leer los productos del carrito: ${error}`);
-        logger.error('Error al obtener carrito por ID', { error });
+        res.status(500).json({ message: "Error al obtener el carrito por ID", error: error.message });
+        logger.error('Error al obtener carrito por ID', { id: cartId, error });
     }
 };
 
 export const addOrUpdateProduct = async (req, res) => {
     try {
-        if (req.user.rol === "User" || req.user.rol === "Premium") {
-            const cartId = req.params.cid;
-            const productId = req.params.pid;
-            let { quantity } = req.body;
+        const { cid: cartId, pid: productId } = req.params;
+        const { quantity = 1 } = req.body;
 
-            if (quantity === undefined) {
-                quantity = 1;
-            }
+        const updatedCart = await cartModel.findOneAndUpdate(
+            { _id: cartId, "products.id_prod": productId },
+            { $inc: { "products.$.quantity": quantity } },
+            { new: true }
+        );
 
-            const updatedCart = await cartModel.findOneAndUpdate(
-                { _id: cartId, "products.id_prod": productId },
-                { $inc: { "products.$.quantity": quantity } },
+        if (!updatedCart) {
+            const newCart = await cartModel.findByIdAndUpdate(
+                cartId,
+                { $push: { products: { id_prod: productId, quantity } } },
                 { new: true }
             );
-
-            if (!updatedCart) {
-                const cart = await cartModel.findByIdAndUpdate(
-                    cartId,
-                    { $push: { products: { id_prod: productId, quantity: quantity } } },
-                    { new: true }
-                );
-                res.status(200).send(cart);
-            } else {
-                res.status(200).send(updatedCart);
-            }
-            logger.info('Producto añadido o actualizado en el carrito');
+            res.status(200).json(newCart);
+            logger.info('Producto añadido al carrito', { cartId, productId, quantity });
         } else {
-            res.status(403).send("Usuario no autorizado");
-            logger.warn('Intento de añadir producto por un usuario no autorizado');
+            res.status(200).json(updatedCart);
+            logger.info('Producto actualizado en el carrito', { cartId, productId, quantity });
         }
     } catch (error) {
-        res.status(500).send(`Error interno al añadir/actualizar producto en el carrito: ${error}`);
-        logger.error('Error al añadir/actualizar producto en el carrito', { error });
+        res.status(500).json({ message: "Error al añadir/actualizar producto en el carrito", error: error.message });
+        logger.error('Error al añadir/actualizar producto en el carrito', { cartId: req.params.cid, error });
     }
 };
 
 export const deleteProduct = async (req, res) => {
     try {
-        const cartId = req.params.cid;
-        const productId = req.params.pid;
-
+        const { cid: cartId, pid: productId } = req.params;
         const updatedCart = await cartModel.findOneAndUpdate(
             { _id: cartId },
             { $pull: { products: { id_prod: productId } } },
@@ -79,15 +68,15 @@ export const deleteProduct = async (req, res) => {
         );
 
         if (updatedCart) {
-            res.status(200).send(updatedCart);
-            logger.info('Producto eliminado del carrito');
+            res.status(200).json(updatedCart);
+            logger.info('Producto eliminado del carrito', { cartId, productId });
         } else {
-            res.status(404).send("Carrito no encontrado");
-            logger.warn('Intento de eliminar producto de un carrito no encontrado');
+            res.status(404).json({ message: "Carrito no encontrado" });
+            logger.warn('Carrito no encontrado al intentar eliminar producto', { cartId });
         }
     } catch (error) {
-        res.status(500).send(`Error interno al eliminar producto del carrito: ${error}`);
-        logger.error('Error al eliminar producto del carrito', { error });
+        res.status(500).json({ message: "Error al eliminar producto del carrito", error: error.message });
+        logger.error('Error al eliminar producto del carrito', { cartId: req.params.cid, error });
     }
 };
 
@@ -100,39 +89,34 @@ export const updateCart = async (req, res) => {
             { $set: { products: newProducts } },
             { new: true }
         );
-        if (!updatedCart) {
-            return res.status(404).send("Carrito no encontrado");
-            logger.warn('Intento de actualizar un carrito no encontrado');
+        if (updatedCart) {
+            res.status(200).json(updatedCart);
+            logger.info('Carrito actualizado correctamente', { cartId });
+        } else {
+            res.status(404).json({ message: "Carrito no encontrado" });
+            logger.warn('Intento de actualizar un carrito no encontrado', { cartId });
         }
-
-        res.status(200).send(updatedCart);
-        logger.info('Carrito actualizado correctamente');
     } catch (error) {
-        res.status(500).send(`Error interno al actualizar el carrito: ${error}`);
-        logger.error('Error al actualizar el carrito', { error });
+        res.status(500).json({ message: "Error interno al actualizar el carrito", error: error.message });
+        logger.error('Error al actualizar el carrito', { cartId, error });
     }
 };
 
 export const deleteCart = async (req, res) => {
     try {
         const cartId = req.params.cid;
+        const updatedCart = await cartModel.findByIdAndUpdate(cartId, { products: [] }, { new: true });
 
-        const updatedCart = await cartModel.findByIdAndUpdate(
-            cartId,
-            { products: [] },
-            { new: true }
-        );
-
-        if (!updatedCart) {
-            return res.status(404).send("Carrito no encontrado");
-            logger.warn('Intento de eliminar un carrito no encontrado');
+        if (updatedCart) {
+            res.status(200).json({ message: "Carrito eliminado correctamente" });
+            logger.info('Carrito eliminado correctamente', { cartId });
+        } else {
+            res.status(404).json({ message: "Carrito no encontrado" });
+            logger.warn('Intento de eliminar un carrito no encontrado', { cartId });
         }
-
-        res.status(200).send("Carrito eliminado!");
-        logger.info('Carrito eliminado correctamente');
     } catch (error) {
-        res.status(500).send(`Error interno al eliminar el carrito: ${error}`);
-        logger.error('Error al eliminar el carrito', { error });
+        res.status(500).json({ message: "Error al eliminar el carrito", error: error.message });
+        logger.error('Error al eliminar el carrito', { cartId, error });
     }
 };
 
@@ -172,7 +156,7 @@ export const createTicket = async (req, res) => {
                     { new: true }
                 );
 
-                res.status(200).send(newTicket);
+                res.status(200).json(newTicket);
                 logger.info('Ticket creado correctamente');
             } else {
                 // Eliminar productos sin stock del carrito
@@ -184,15 +168,15 @@ export const createTicket = async (req, res) => {
                     );
                 }));
                 
-                res.status(400).send("Algunos productos no tienen stock suficiente");
+                res.status(400).json("Algunos productos no tienen stock suficiente");
                 logger.warn('Algunos productos no tienen stock suficiente');
             }
         } else {
-            res.status(404).send("Carrito no existe");
+            res.status(404).json("Carrito no existe");
             logger.warn('Intento de crear ticket para un carrito que no existe');
         }
     } catch (error) {
-        res.status(500).send(`Error interno del servidor: ${error}`);
+        res.status(500).json(`Error interno del servidor: ${error}`);
         logger.error('Error interno al crear ticket', { error });
     }
 };

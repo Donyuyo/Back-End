@@ -7,7 +7,7 @@ export const getMockProducts = (req, res) => {
         res.status(200).json(mockProducts);
         logger.info('Productos simulados generados correctamente');
     } catch (error) {
-        res.status(500).send("Error al generar productos simulados: " + error);
+        res.status(500).json({ message: "Error al generar productos simulados", error: error.message });
         logger.error('Error al generar productos simulados', { error });
     }
 };
